@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 背景渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9c27b0" />
+      <stop offset="100%" stop-color="#00bcd4" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景形状 -->
+  <path d="M120,160 C80,220 100,300 160,340 C220,380 280,360 340,400 C400,440 480,400 480,320 C480,240 420,180 360,160 C300,140 220,160 160,140 C100,120 160,100 120,160 Z" fill="url(#bgGradient)" />
+  <path d="M120,160 C80,220 100,300 160,340 C220,380 280,360 340,400 C400,440 480,400 480,320 C480,240 420,180 360,160 C300,140 220,160 160,140 C100,120 160,100 120,160 Z" fill="none" stroke="white" stroke-width="8" />
+  
+  <!-- 底部波浪 -->
+  <path d="M120,380 C180,420 240,380 300,420 C360,460 420,420 480,380" fill="none" stroke="#00bcd4" stroke-width="6" />
+  
+  <!-- AI文字 -->
+  <text x="280" y="280" font-family="Arial, sans-serif" font-size="140" font-weight="bold" text-anchor="middle" fill="white">AI</text>
+  
+  <!-- 网络节点图标 -->
+  <g stroke="white" stroke-width="4" fill="none">
+    <!-- 中心节点 -->
+    <circle cx="400" cy="240" r="15" fill="white" />
+    
+    <!-- 周围节点 -->
+    <circle cx="360" cy="200" r="10" fill="white" />
+    <circle cx="440" cy="200" r="10" fill="white" />
+    <circle cx="340" cy="240" r="10" fill="white" />
+    <circle cx="460" cy="240" r="10" fill="white" />
+    <circle cx="360" cy="280" r="10" fill="white" />
+    <circle cx="440" cy="280" r="10" fill="white" />
+    
+    <!-- 连接线 -->
+    <line x1="400" y1="240" x2="360" y2="200" />
+    <line x1="400" y1="240" x2="440" y2="200" />
+    <line x1="400" y1="240" x2="340" y2="240" />
+    <line x1="400" y1="240" x2="460" y2="240" />
+    <line x1="400" y1="240" x2="360" y2="280" />
+    <line x1="400" y1="240" x2="440" y2="280" />
+    
+    <!-- 外层连接线 -->
+    <line x1="360" y1="200" x2="440" y2="200" />
+    <line x1="440" y1="200" x2="460" y2="240" />
+    <line x1="460" y1="240" x2="440" y2="280" />
+    <line x1="440" y1="280" x2="360" y2="280" />
+    <line x1="360" y1="280" x2="340" y2="240" />
+    <line x1="340" y1="240" x2="360" y2="200" />
+  </g>
+</svg>

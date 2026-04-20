@@ -1,0 +1,179 @@
+{
+  "name": "storyboard-copilot-comfyui",
+  "version": "1.0.0",
+  "description": "ComfyUI integration dependencies and configurations",
+  "comfyui_version": "stable",
+  "plugins": [
+    {
+      "id": "comfyui-manager",
+      "name": "ComfyUI Manager",
+      "version": "latest",
+      "repository": "https://github.com/Comfy-Org/ComfyUI-Manager",
+      "required": true
+    },
+    {
+      "id": "comfyui-impact-pack",
+      "name": "ComfyUI Impact Pack",
+      "version": "latest",
+      "repository": "https://github.com/DrLT/ComfyUI-Impact-Pack",
+      "required": false
+    },
+    {
+      "id": "advanced-controlnet",
+      "name": "ComfyUI-Advanced-ControlNet",
+      "version": "latest",
+      "repository": "https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet",
+      "required": false
+    },
+    {
+      "id": "controlnet-skeletons",
+      "name": "ComfyUI-ControlNet-Skeletons",
+      "version": "latest",
+      "repository": "https://github.com/Fannovel16/ComfyUI-ControlNet-Skeletons",
+      "required": false
+    },
+    {
+      "id": "bria-ai-relay",
+      "name": "ComfyUI-BRIA-AI-Relay",
+      "version": "latest",
+      "repository": "https://github.com/BRIA-AI/ComfyUI-BRIA-AI-Relay",
+      "required": false
+    },
+    {
+      "id": "sdxl-icons-prompts",
+      "name": "ComfyUI-SDXL-IconsPrompts",
+      "version": "latest",
+      "repository": "https://github.com/TheMistoBear/ComfyUI-SDXL-IconsPrompts",
+      "required": false
+    },
+    {
+      "id": "clip-encoding",
+      "name": "ComfyUI-CLIPEncoding",
+      "version": "latest",
+      "repository": "https://github.com/huchenlei/ComfyUI-CLIPEncoding",
+      "required": false
+    },
+    {
+      "id": "was-node-suite",
+      "name": "ComfyUI-WAS-Nodes-Suite",
+      "version": "latest",
+      "repository": "https://github.com/WASasquatch/ComfyUI-WAS-Nodes-Suite",
+      "required": false
+    },
+    {
+      "id": "ui-enhancements",
+      "name": "ComfyUI-Custom-Scripts",
+      "version": "latest",
+      "repository": "https://github.com/pythongosssss/ComfyUI-Custom-Scripts",
+      "required": false
+    },
+    {
+      "id": "essence-nodes",
+      "name": "ComfyUI-Essence-Nodes",
+      "version": "latest",
+      "repository": "https://github.com/bananatic/ComfyUI-Essence-Nodes",
+      "required": false
+    },
+    {
+      "id": "frame-interpolation",
+      "name": "ComfyUI-Frame-Interpolation",
+      "version": "latest",
+      "repository": "https://github.com/ArtViper/ComfyUI-Frame-Interpolation",
+      "required": false
+    },
+    {
+      "id": "deep-fade",
+      "name": "ComfyUI-DeepFade",
+      "version": "latest",
+      "repository": "https://github.com/Z pohon/ComfyUI-DeepFade",
+      "required": false
+    },
+    {
+      "id": "fine-controls",
+      "name": "ComfyUI FineControlNodes",
+      "version": "latest",
+      "repository": "https://github.com/WASasquatch/ComfyUI FineControlNodes",
+      "required": false
+    },
+    {
+      "id": "rgthree-comfy",
+      "name": "ComfyUI-rgthree",
+      "version": "latest",
+      "repository": "https://github.com/rgthree/ComfyUI-rgthree",
+      "required": false
+    },
+    {
+      "id": "auditor",
+      "name": "ComfyUI-Auditor",
+      "version": "latest",
+      "repository": "https://github.com/clock-z/ComfyUI-Auditor",
+      "required": false
+    },
+    {
+      "id": "prompt-control",
+      "name": "ComfyUI-Prompt-Control",
+      "version": "latest",
+      "repository": "https://github.com/Vel03/ComfyUI-Prompt-Control",
+      "required": false
+    },
+    {
+      "id": "starcrafter",
+      "name": "ComfyUI-Starcrafter",
+      "version": "latest",
+      "repository": "https://github.com/jakejet64/ComfyUI-Starcrafter",
+      "required": false
+    },
+    {
+      "id": "image-filters",
+      "name": "ComfyUI-Image-Filters",
+      "version": "latest",
+      "repository": "https://github.com/dummyassets/ComfyUI-Image-Filters",
+      "required": false
+    },
+    {
+      "id": "lora-auto-load",
+      "name": "ComfyUI-Lora-Auto-Load",
+      "version": "latest",
+      "repository": "https://github.com/nicejji/ComfyUI-Lora-Auto-Load",
+      "required": false
+    },
+    {
+      "id": "multi-attention",
+      "name": "ComfyUI-MultiAttention",
+      "version": "latest",
+      "repository": "https://github.com/DjD下/ComfyUI-MultiAttention",
+      "required": false
+    }
+  ],
+  "python_requirements": [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "numpy>=1.23.0",
+    "opencv-python>=4.7.0",
+    "pillow>=9.0.0",
+    "scipy>=1.10.0",
+    "transformers>=4.25.0",
+    "diffusers>=0.14.0",
+    "accelerate>=0.20.0",
+    "safetensors>=0.3.0"
+  ],
+  "model_sources": {
+    "checkpoints": [
+      "https://huggingface.co/models",
+      "https://civitai.com/models"
+    ],
+    "loras": [
+      "https://huggingface.co/models",
+      "https://civitai.com/models"
+    ],
+    "controlnet": [
+      "https://huggingface.co/lllyasviel/ControlNet"
+    ]
+  },
+  "comfyui_settings": {
+    "listen": "127.0.0.1",
+    "port": 8188,
+    "enable_cors": true,
+    "auto_launch": false
+  }
+}

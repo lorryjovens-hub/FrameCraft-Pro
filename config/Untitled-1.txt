@@ -1,0 +1,5 @@
+// 导入ComfyUI模板库
+import { ComfyUITemplateLibrary } from '@/features/canvas/comfyui';
+
+// 导入本地模型插件管理器
+import { LocalModelPluginManager } from '@/features/canvas/localModels';
