@@ -51,6 +51,8 @@ impl JimengProvider {
         match sanitized_model.as_str() {
             "s2" => "jimeng/s2",
             "s3" => "jimeng/s3",
+            "seedance-2.0" => "bytedance/seedance-2",
+            "seedance-2.0-fast" => "bytedance/seedance-2-fast",
             _ => "jimeng/s2",
         }
     }
@@ -80,7 +82,7 @@ impl AIProvider for JimengProvider {
     fn supports_model(&self, model: &str) -> bool {
         matches!(
             Self::sanitize_model(model).as_str(),
-            "s2" | "s3"
+            "s2" | "s3" | "seedance-2.0" | "seedance-2.0-fast"
         )
     }
 
@@ -88,6 +90,8 @@ impl AIProvider for JimengProvider {
         vec![
             "jimeng/s2".to_string(),
             "jimeng/s3".to_string(),
+            "jimeng/seedance-2.0".to_string(),
+            "jimeng/seedance-2.0-fast".to_string(),
         ]
     }
 

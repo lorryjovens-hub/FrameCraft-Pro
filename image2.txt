@@ -1,0 +1,467 @@
+# GPT Image-2 - Text to Image
+
+## OpenAPI Specification
+
+```yaml
+openapi: 3.0.1
+info:
+  title: ''
+  description: ''
+  version: 1.0.0
+paths:
+  /api/v1/jobs/createTask:
+    post:
+      summary: GPT Image-2 - Text to Image
+      deprecated: false
+      description: >-
+        ## Create Task
+
+
+        Use this endpoint to create a new text-to-image generation task.
+
+
+        <Card title="Get Task Details" icon="lucide-search"
+        href="/market/common/get-task-detail">
+          After submission, use the unified query endpoint to check task progress and retrieve results
+        </Card>
+
+
+        ::: tip[]
+
+        For production use, we recommend providing the `callBackUrl` parameter
+        so your service can receive completion notifications instead of polling
+        for task status.
+
+        :::
+
+
+        ## Related Resources
+
+
+        <CardGroup cols={2}>
+          <Card title="Model Marketplace" icon="lucide-store" href="/market/quickstart">
+            Explore all available models and capabilities
+          </Card>
+          <Card title="Common API" icon="lucide-cog" href="/common-api/get-account-credits">
+            Check account credits and usage
+          </Card>
+        </CardGroup>
+      operationId: gpt-image-2-text-to-image
+      tags:
+        - docs/en/Market/Image    Models/GPT Image
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+                - input
+              properties:
+                model:
+                  type: string
+                  description: >-
+                    The model name used for generation. This field is required.
+                    This endpoint must use the `gpt-image-2-text-to-image`
+                    model.
+                  enum:
+                    - gpt-image-2-text-to-image
+                  default: gpt-image-2-text-to-image
+                  x-apidog-enum:
+                    - value: gpt-image-2-text-to-image
+                      name: ''
+                      description: ''
+                  examples:
+                    - gpt-image-2-text-to-image
+                callBackUrl:
+                  type: string
+                  format: uri
+                  description: >-
+                    Callback URL for task completion notifications. Optional
+                    parameter. If provided, the system will send a POST request
+                    to this URL when the task completes, whether it succeeds or
+                    fails. If omitted, no callback notification will be sent.
+                  examples:
+                    - https://your-domain.com/api/callback
+                input:
+                  type: object
+                  description: Input parameters for the text-to-image task.
+                  required:
+                    - prompt
+                  properties:
+                    prompt:
+                      type: string
+                      description: Text prompt. Required, maximum 20,000 characters.
+                      minLength: 1
+                      maxLength: 20000
+                      examples:
+                        - >-
+                          A cinematic night city poster with neon reflections on
+                          a rainy street.
+                    aspect_ratio:
+                      type: string
+                      description: >-
+                        The aspect ratio of the generated image is set to auto
+                        by default.
+                      enum:
+                        - auto
+                        - '1:1'
+                        - '9:16'
+                        - '16:9'
+                        - '4:3'
+                        - '3:4'
+                      x-apidog-enum:
+                        - value: auto
+                          name: ''
+                          description: ''
+                        - value: '1:1'
+                          name: ''
+                          description: ''
+                        - value: '9:16'
+                          name: ''
+                          description: ''
+                        - value: '16:9'
+                          name: ''
+                          description: ''
+                        - value: '4:3'
+                          name: ''
+                          description: ''
+                        - value: '3:4'
+                          name: ''
+                          description: ''
+                    resolution:
+                      type: string
+                      enum:
+                        - 1K
+                        - 2K
+                        - 4K
+                      x-apidog-enum:
+                        - value: 1K
+                          name: ''
+                          description: ''
+                        - value: 2K
+                          name: ''
+                          description: ''
+                        - value: 4K
+                          name: ''
+                          description: ''
+                      description: >-
+                        Image resolution: Note: Images with a 1:1 aspect ratio
+                        cannot be converted to 4K images. Images with the aspect
+                        ratio set to "auto" or without a specified aspect ratio
+                        parameter will only be converted to 1K images;
+                        otherwise, the task will fail to create.
+                  x-apidog-orders:
+                    - prompt
+                    - aspect_ratio
+                    - resolution
+                  x-apidog-ignore-properties: []
+              x-apidog-orders:
+                - model
+                - callBackUrl
+                - input
+              x-apidog-ignore-properties: []
+            example:
+              model: gpt-image-2-text-to-image
+              callBackUrl: https://your-domain.com/api/callback
+              input:
+                prompt: >-
+                  A cinematic night city poster with neon reflections on a rainy
+                  street.
+                aspect_ratio: auto
+      responses:
+        '200':
+          description: Request successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      code:
+                        type: integer
+                        description: >-
+                          Response status code
+
+
+                          - **200**: Success - Request has been processed
+                          successfully
+
+                          - **401**: Unauthorized - Authentication credentials
+                          are missing or invalid
+
+                          - **402**: Insufficient Credits - Account does not
+                          have enough credits to perform the operation
+
+                          - **404**: Not Found - The requested resource or
+                          endpoint does not exist
+
+                          - **422**: Validation Error - The request parameters
+                          failed validation checks
+
+                          - **429**: Rate Limited - Request limit has been
+                          exceeded for this resource
+
+                          - **433**: Request Limit - Sub-key Usage Exceeds Limit
+
+                          - **455**: Service Unavailable - System is currently
+                          undergoing maintenance
+
+                          - **500**: Server Error - An unexpected error occurred
+                          while processing the request
+
+                          - **501**: Generation Failed - Content generation task
+                          failed
+
+                          - **505**: Feature Disabled - The requested feature is
+                          currently disabled
+                        enum:
+                          - 200
+                          - 401
+                          - 402
+                          - 404
+                          - 422
+                          - 429
+                          - 433
+                          - 455
+                          - 500
+                          - 501
+                          - 505
+                        x-apidog-enum:
+                          - value: 200
+                            name: ''
+                            description: ''
+                          - value: 401
+                            name: ''
+                            description: ''
+                          - value: 402
+                            name: ''
+                            description: ''
+                          - value: 404
+                            name: ''
+                            description: ''
+                          - value: 422
+                            name: ''
+                            description: ''
+                          - value: 429
+                            name: ''
+                            description: ''
+                          - value: 433
+                            name: ''
+                            description: ''
+                          - value: 455
+                            name: ''
+                            description: ''
+                          - value: 500
+                            name: ''
+                            description: ''
+                          - value: 501
+                            name: ''
+                            description: ''
+                          - value: 505
+                            name: ''
+                            description: ''
+                      msg:
+                        type: string
+                        description: Response message, error description when failed
+                        examples:
+                          - success
+                      data:
+                        type: object
+                        properties:
+                          taskId:
+                            type: string
+                            description: >-
+                              Task ID, can be used with Get Task Details
+                              endpoint to query task status
+                        x-apidog-orders:
+                          - taskId
+                        required:
+                          - taskId
+                        x-apidog-ignore-properties: []
+                    x-apidog-orders:
+                      - 01KPR07RANE520VZS4M5X3TGNY
+                    required:
+                      - data
+                    x-apidog-refs:
+                      01KPR07RANE520VZS4M5X3TGNY:
+                        $ref: '#/components/schemas/ApiResponse'
+                    x-apidog-ignore-properties:
+                      - code
+                      - msg
+                      - data
+              example:
+                code: 200
+                msg: success
+                data:
+                  taskId: task_gptimage_1765180586443
+          headers: {}
+          x-apidog-name: ''
+      security:
+        - BearerAuth: []
+          x-apidog:
+            schemeGroups:
+              - id: kn8M4YUlc5i0A0179ezwx
+                schemeIds:
+                  - BearerAuth
+            required: true
+            use:
+              id: kn8M4YUlc5i0A0179ezwx
+            scopes:
+              kn8M4YUlc5i0A0179ezwx:
+                BearerAuth: []
+      x-apidog-folder: docs/en/Market/Image    Models/GPT Image
+      x-apidog-status: released
+      x-run-in-apidog: https://app.apidog.com/web/project/1184766/apis/api-33846334-run
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: >-
+            Response status code
+
+
+            - **200**: Success - Request has been processed successfully
+
+            - **401**: Unauthorized - Authentication credentials are missing or
+            invalid
+
+            - **402**: Insufficient Credits - Account does not have enough
+            credits to perform the operation
+
+            - **404**: Not Found - The requested resource or endpoint does not
+            exist
+
+            - **422**: Validation Error - The request parameters failed
+            validation checks
+
+            - **429**: Rate Limited - Request limit has been exceeded for this
+            resource
+
+            - **433**: Request Limit - Sub-key Usage Exceeds Limit
+
+            - **455**: Service Unavailable - System is currently undergoing
+            maintenance
+
+            - **500**: Server Error - An unexpected error occurred while
+            processing the request
+
+            - **501**: Generation Failed - Content generation task failed
+
+            - **505**: Feature Disabled - The requested feature is currently
+            disabled
+          enum:
+            - 200
+            - 401
+            - 402
+            - 404
+            - 422
+            - 429
+            - 433
+            - 455
+            - 500
+            - 501
+            - 505
+          x-apidog-enum:
+            - value: 200
+              name: ''
+              description: ''
+            - value: 401
+              name: ''
+              description: ''
+            - value: 402
+              name: ''
+              description: ''
+            - value: 404
+              name: ''
+              description: ''
+            - value: 422
+              name: ''
+              description: ''
+            - value: 429
+              name: ''
+              description: ''
+            - value: 433
+              name: ''
+              description: ''
+            - value: 455
+              name: ''
+              description: ''
+            - value: 500
+              name: ''
+              description: ''
+            - value: 501
+              name: ''
+              description: ''
+            - value: 505
+              name: ''
+              description: ''
+        msg:
+          type: string
+          description: Response message, error description when failed
+          examples:
+            - success
+        data:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: >-
+                Task ID, can be used with Get Task Details endpoint to query
+                task status
+          x-apidog-orders:
+            - taskId
+          required:
+            - taskId
+          x-apidog-ignore-properties: []
+      x-apidog-orders:
+        - code
+        - msg
+        - data
+      title: response not with recordId
+      required:
+        - data
+      x-apidog-ignore-properties: []
+      x-apidog-folder: ''
+  securitySchemes:
+    BearerAuth:
+      type: bearer
+      scheme: bearer
+      bearerFormat: API Key
+      description: |-
+        所有 API 都需要通过 Bearer Token 进行身份验证。
+
+        获取 API Key：
+        1. 访问 [API Key 管理页面](https://kie.ai/api-key) 获取您的 API Key
+
+        使用方法：
+        在请求头中添加：
+        Authorization: Bearer YOUR_API_KEY
+
+        注意事项：
+        - 请妥善保管您的 API Key，切勿泄露给他人
+        - 若怀疑 API Key 泄露，请立即在管理页面重置
+servers:
+  - url: https://api.kie.ai
+    description: 正式环境
+security:
+  - BearerAuth: []
+    x-apidog:
+      schemeGroups:
+        - id: kn8M4YUlc5i0A0179ezwx
+          schemeIds:
+            - BearerAuth
+      required: true
+      use:
+        id: kn8M4YUlc5i0A0179ezwx
+      scopes:
+        kn8M4YUlc5i0A0179ezwx:
+          BearerAuth: []
+
+```
+
+

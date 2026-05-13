@@ -30,3 +30,9 @@ Henji-AI/
 # Tauri
 src-tauri/target
 !.src-tauri/target/.gitkeep
+
+# Test
+coverage
+playwright-report
+test-results
+blob-report

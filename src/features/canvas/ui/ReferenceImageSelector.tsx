@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+  import { memo, useState, useCallback } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCanvasStore } from '@/stores/canvasStore';

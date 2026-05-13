@@ -213,6 +213,9 @@ export async function getGenerateImageJob(jobId: string): Promise<GenerationJobS
 }
 
 export async function listModels(): Promise<string[]> {
+  if (!isTauri()) {
+    return [];
+  }
   return await invoke('list_models');
 }
 

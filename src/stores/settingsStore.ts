@@ -242,7 +242,10 @@ export const useSettingsStore = create<SettingsState>()(
           if (error) {
             console.error('failed to hydrate settings storage', error);
           }
-          useSettingsStore.setState({ isHydrated: true });
+          // Use setTimeout to defer setState until after store initialization
+          setTimeout(() => {
+            useSettingsStore.setState({ isHydrated: true });
+          }, 0);
         };
       },
       migrate: (persistedState: unknown) => {

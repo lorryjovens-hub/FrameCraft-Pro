@@ -396,22 +396,30 @@ export const VideoGenNode = memo(({ id, data, selected, width, height }: VideoGe
   }, []);
 
   const handleGenerate = useCallback(async () => {
-    const prompt = promptDraft.replace(/@(?=图\d+)/g, '').trim();
-    if (!prompt) {
-      const errorMessage = t('node.imageEdit.promptRequired');
-      setError(errorMessage);
-      showErrorDialog(errorMessage, t('common.error'));
-      return;
-    }
-
-    if (!providerApiKey) {
-      const errorMessage = t('node.imageEdit.apiKeyRequired');
-      setError(errorMessage);
-      showErrorDialog(errorMessage, t('common.error'));
-      return;
-    }
+    console.log('[VideoGenNode] handleGenerate called', {
+      promptDraft,
+      providerApiKey: providerApiKey ? `${providerApiKey.slice(0, 4)}***` : '(empty)',
+      selectedModelId: selectedModel?.id,
+      selectedModelProviderId: selectedModel?.providerId,
+    });
 
     try {
+      const prompt = promptDraft.replace(/@(?=图\d+)/g, '').trim();
+      if (!prompt) {
+        const errorMessage = t('node.imageEdit.promptRequired');
+        setError(errorMessage);
+        showErrorDialog(errorMessage, t('common.error'));
+        return;
+      }
+
+      if (!providerApiKey) {
+        const errorMessage = t('node.imageEdit.apiKeyRequired');
+        setError(errorMessage);
+        showErrorDialog(errorMessage, t('common.error'));
+        return;
+      }
+
+      console.log('[VideoGenNode] calling setApiKey', { providerId: selectedModel.providerId });
       await canvasAiGateway.setApiKey(selectedModel.providerId, providerApiKey);
 
       updateNodeData(id, {
@@ -421,6 +429,7 @@ export const VideoGenNode = memo(({ id, data, selected, width, height }: VideoGe
         generationErrorDetails: null,
       });
 
+      console.log('[VideoGenNode] submitting video job', { model: selectedModel.id });
       const jobId = await canvasAiGateway.submitGenerateVideoJob({
         prompt,
         model: selectedModel.id,
@@ -434,10 +443,12 @@ export const VideoGenNode = memo(({ id, data, selected, width, height }: VideoGe
         },
       });
 
+      console.log('[VideoGenNode] job submitted', { jobId });
       updateNodeData(id, {
         generationJobId: jobId,
       });
     } catch (err) {
+      console.error('[VideoGenNode] generation error', err);
       const errorContent = resolveErrorContent(err, t('ai.error'));
       setError(errorContent.message);
 

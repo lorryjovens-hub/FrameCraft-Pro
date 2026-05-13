@@ -7,12 +7,13 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
-use tracing::info;
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::ai::error::AIError;
 use crate::ai::{
     AIProvider, GenerateRequest, ProviderTaskHandle, ProviderTaskPollResult, ProviderTaskSubmission,
+    VideoGenerateRequest,
 };
 
 const TASK_BASE_URL: &str = "https://api.kie.ai";
@@ -22,6 +23,7 @@ const RECORD_INFO_PATH: &str = "/api/v1/jobs/recordInfo";
 const FILE_UPLOAD_PATH: &str = "/api/file-stream-upload";
 const UPLOAD_PATH: &str = "images/storyboard-copilot";
 const POLL_INTERVAL_MS: u64 = 2500;
+const VIDEO_POLL_INTERVAL_MS: u64 = 5000;
 
 #[derive(Debug, Deserialize)]
 struct KieCreateTaskResponse {
@@ -55,6 +57,14 @@ struct KieTaskInfoData {
 
 #[derive(Debug, Deserialize)]
 struct KieTaskResultJson {
+    #[serde(rename = "resultUrls")]
+    result_urls: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct KieVideoTaskResultJson {
+    #[serde(rename = "videoUrl")]
+    video_url: Option<String>,
     #[serde(rename = "resultUrls")]
     result_urls: Option<Vec<String>>,
 }
@@ -434,6 +444,226 @@ impl KieProvider {
             }
         }
     }
+
+    fn resolve_kie_api_model(frontend_model: &str) -> String {
+        match frontend_model {
+            "kie/gpt-image-2-video" => "gpt-image-2-text-to-video".to_string(),
+            "kie/wan-2.7-video" => "wan/2-7-text-to-video".to_string(),
+            "kie/happyhorse-1.0" => "happyhorse/text-to-video".to_string(),
+            "kie/kling-3.0" => "kling-3.0/video".to_string(),
+            "kie/seedance-2" => "bytedance/seedance-2".to_string(),
+            other => {
+                warn!("[KIE] unknown frontend model '{}', falling back to raw value", other);
+                other.to_string()
+            }
+        }
+    }
+
+    fn is_video_model(model: &str) -> bool {
+        matches!(
+            model,
+            "gpt-image-2-text-to-video"
+                | "wan/2-7-text-to-video"
+                | "happyhorse/text-to-video"
+                | "kling-3.0/video"
+                | "bytedance/seedance-2"
+        )
+    }
+
+    async fn create_video_task(
+        &self,
+        api_key: &str,
+        request: &VideoGenerateRequest,
+        model: &str,
+        uploaded_images: Vec<String>,
+    ) -> Result<String, AIError> {
+        if uploaded_images.iter().any(|url| !Self::is_http_url(url)) {
+            return Err(AIError::InvalidRequest(
+                "KIE video image_input contains non-http URL, upload step may have failed".to_string(),
+            ));
+        }
+
+        info!(
+            "[KIE createVideoTask] using uploaded image URLs: count={}",
+            uploaded_images.len()
+        );
+
+        let mut input = json!({
+            "prompt": request.prompt,
+            "aspect_ratio": request.aspect_ratio,
+        });
+
+        match model {
+            "wan/2-7-text-to-video" => {
+                input["duration"] = json!(request.duration.parse::<u32>().unwrap_or(5));
+                input["resolution"] = json!("1080p");
+                if !uploaded_images.is_empty() {
+                    input["image_input"] = json!(uploaded_images);
+                }
+            }
+            "happyhorse/text-to-video" => {
+                input["resolution"] = json!("1080p");
+                input["duration"] = json!(request.duration.parse::<u32>().unwrap_or(5));
+                if !uploaded_images.is_empty() {
+                    input["image_input"] = json!(uploaded_images);
+                }
+            }
+            "kling-3.0/video" => {
+                input["mode"] = json!("std");
+                if !uploaded_images.is_empty() {
+                    input["image_input"] = json!(uploaded_images);
+                }
+            }
+            "bytedance/seedance-2" => {
+                input["resolution"] = json!("720p");
+                input["duration"] = json!(request.duration.parse::<u32>().unwrap_or(15));
+                if !uploaded_images.is_empty() {
+                    input["reference_image_urls"] = json!(uploaded_images);
+                }
+            }
+            "gpt-image-2-text-to-video" => {
+                if !uploaded_images.is_empty() {
+                    input["image_input"] = json!(uploaded_images);
+                }
+            }
+            _ => {
+                if !uploaded_images.is_empty() {
+                    input["image_input"] = json!(uploaded_images);
+                }
+            }
+        }
+
+        let endpoint = format!("{}{}", TASK_BASE_URL, CREATE_TASK_PATH);
+        let body = json!({
+            "model": model,
+            "input": input
+        });
+
+        info!("[KIE video request] model: {}, aspect_ratio: {}, duration: {}, refs: {}", model, request.aspect_ratio, request.duration, uploaded_images.len());
+
+        let response = self
+            .client
+            .post(&endpoint)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        let status = response.status();
+        let raw_response = response.text().await.unwrap_or_default();
+        if !status.is_success() {
+            return Err(AIError::Provider(format!(
+                "KIE createVideoTask failed {}: {}",
+                status, raw_response
+            )));
+        }
+
+        let body = serde_json::from_str::<KieCreateTaskResponse>(&raw_response).map_err(|err| {
+            AIError::Provider(format!(
+                "KIE createVideoTask invalid JSON response: {}; raw={}",
+                err,
+                raw_response
+            ))
+        })?;
+        if body.code != 200 {
+            return Err(AIError::Provider(format!(
+                "KIE createVideoTask rejected: {}",
+                body.msg
+            )));
+        }
+
+        body.data
+            .map(|data| data.task_id)
+            .ok_or_else(|| AIError::Provider("KIE createVideoTask missing taskId".to_string()))
+    }
+
+    fn extract_video_result_url(result_json_str: &str) -> Option<String> {
+        if let Ok(data) = serde_json::from_str::<KieVideoTaskResultJson>(result_json_str) {
+            if let Some(url) = data.video_url.filter(|u| !u.is_empty()) {
+                return Some(url);
+            }
+            if let Some(urls) = data.result_urls {
+                if let Some(url) = urls.into_iter().find(|u| !u.is_empty()) {
+                    return Some(url);
+                }
+            }
+        }
+        Self::extract_result_url(result_json_str)
+    }
+
+    async fn poll_video_task_once(
+        &self,
+        api_key: &str,
+        task_id: &str,
+    ) -> Result<ProviderTaskPollResult, AIError> {
+        let endpoint = format!("{}{}", TASK_BASE_URL, RECORD_INFO_PATH);
+        let response = self
+            .client
+            .get(&endpoint)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .query(&[("taskId", task_id)])
+            .send()
+            .await?;
+
+        let status = response.status();
+        let raw_response = response.text().await.unwrap_or_default();
+        if !status.is_success() {
+            return Err(AIError::Provider(format!(
+                "KIE video recordInfo failed {}: {}",
+                status, raw_response
+            )));
+        }
+
+        let body = serde_json::from_str::<KieTaskInfoResponse>(&raw_response).map_err(|err| {
+            AIError::Provider(format!(
+                "KIE video recordInfo invalid JSON response: {}; raw={}",
+                err,
+                raw_response
+            ))
+        })?;
+        if body.code != 200 {
+            let message = body
+                .message
+                .or(body.msg)
+                .unwrap_or_else(|| "unknown query error".to_string());
+            return Err(AIError::Provider(format!("KIE video task query rejected: {}", message)));
+        }
+
+        let data = body
+            .data
+            .ok_or_else(|| AIError::Provider("KIE video task query missing data".to_string()))?;
+        match data.state.as_deref() {
+            Some("success") => {
+                let result_json = data.result_json.ok_or_else(|| {
+                    AIError::Provider("KIE video success response missing resultJson".to_string())
+                })?;
+                if let Some(url) = Self::extract_video_result_url(&result_json) {
+                    return Ok(ProviderTaskPollResult::Succeeded(url));
+                }
+                Err(AIError::Provider(
+                    "KIE video resultJson has no valid result URL".to_string(),
+                ))
+            }
+            Some("fail") => Ok(ProviderTaskPollResult::Failed(
+                data.fail_msg.unwrap_or_else(|| "KIE video task failed".to_string()),
+            )),
+            Some("waiting") | Some("queuing") | Some("generating") | None => {
+                Ok(ProviderTaskPollResult::Running)
+            }
+            Some(other) => Err(AIError::Provider(format!("KIE video unexpected task state: {}", other))),
+        }
+    }
+
+    async fn poll_video_task_until_complete(&self, api_key: &str, task_id: &str) -> Result<String, AIError> {
+        loop {
+            match self.poll_video_task_once(api_key, task_id).await? {
+                ProviderTaskPollResult::Running => sleep(Duration::from_millis(VIDEO_POLL_INTERVAL_MS)).await,
+                ProviderTaskPollResult::Succeeded(url) => return Ok(url),
+                ProviderTaskPollResult::Failed(message) => return Err(AIError::TaskFailed(message)),
+            }
+        }
+    }
 }
 
 impl Default for KieProvider {
@@ -449,16 +679,22 @@ impl AIProvider for KieProvider {
     }
 
     fn supports_model(&self, model: &str) -> bool {
+        let sanitized = Self::sanitize_model(model);
         matches!(
-            Self::sanitize_model(model).as_str(),
+            sanitized.as_str(),
             "nano-banana-2" | "nano-banana-pro"
-        )
+        ) || Self::is_video_model(&sanitized)
     }
 
     fn list_models(&self) -> Vec<String> {
         vec![
             "kie/nano-banana-2".to_string(),
             "kie/nano-banana-pro".to_string(),
+            "kie/gpt-image-2-video".to_string(),
+            "kie/wan-2.7-video".to_string(),
+            "kie/happyhorse-1.0".to_string(),
+            "kie/kling-3.0".to_string(),
+            "kie/seedance-2".to_string(),
         ]
     }
 
@@ -533,5 +769,44 @@ impl AIProvider for KieProvider {
             .create_task(&api_key, &request, &model, uploaded_images)
             .await?;
         self.poll_task_until_complete(&api_key, &task_id).await
+    }
+
+    async fn generate_video(&self, request: VideoGenerateRequest) -> Result<String, AIError> {
+        let api_key = self
+            .api_key
+            .read()
+            .await
+            .clone()
+            .ok_or_else(|| AIError::InvalidRequest("API key not set for video generation".to_string()))?;
+        let model = Self::resolve_kie_api_model(&request.model);
+
+        if !Self::is_video_model(&model) {
+            return Err(AIError::ModelNotSupported(format!(
+                "KIE video generation does not support model: {}",
+                request.model
+            )));
+        }
+
+        info!(
+            "[KIE Video Request] model: {}, aspect_ratio: {}, duration: {}, refs: {}",
+            model,
+            request.aspect_ratio,
+            request.duration,
+            request.reference_images.as_ref().map(|refs| refs.len()).unwrap_or(0)
+        );
+
+        let uploaded_images = self
+            .upload_reference_images(
+                &api_key,
+                &model,
+                request.reference_images.as_deref().unwrap_or(&[]),
+            )
+            .await?;
+
+        let task_id = self
+            .create_video_task(&api_key, &request, &model, uploaded_images)
+            .await?;
+
+        self.poll_video_task_until_complete(&api_key, &task_id).await
     }
 }

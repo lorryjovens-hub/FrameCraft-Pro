@@ -25,10 +25,13 @@ async function normalizeReferenceImages(payload: GenerateImagePayload): Promise<
 }
 
 async function normalizeVideoReferenceImages(payload: VideoGeneratePayload): Promise<string[] | undefined> {
+  const isKieModel = payload.model.startsWith('kie/');
   return payload.referenceImages
     ? await Promise.all(
       payload.referenceImages.map(async (imageUrl) =>
-        await persistImageLocally(imageUrl)
+        isKieModel
+          ? await imageUrlToDataUrl(imageUrl)
+          : await persistImageLocally(imageUrl)
       )
     )
     : undefined;

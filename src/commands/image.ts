@@ -1,4 +1,10 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
+
+function guardTauri(): void {
+  if (!isTauri()) {
+    throw new Error('当前不是 Tauri 容器环境，请使用 `npm run tauri dev` 启动');
+  }
+}
 
 export async function splitImage(
   imageBase64: string,
@@ -6,6 +12,7 @@ export async function splitImage(
   cols: number,
   lineThickness = 0
 ): Promise<string[]> {
+  guardTauri();
   return await invoke('split_image', {
     imageBase64,
     rows,
@@ -20,6 +27,7 @@ export async function splitImageSource(
   cols: number,
   lineThickness = 0
 ): Promise<string[]> {
+  guardTauri();
   return await invoke('split_image_source', {
     source,
     rows,
@@ -85,12 +93,14 @@ export interface MergeStoryboardImagesResult {
 export async function mergeStoryboardImages(
   payload: MergeStoryboardImagesPayload
 ): Promise<MergeStoryboardImagesResult> {
+  guardTauri();
   return await invoke('merge_storyboard_images', { payload });
 }
 
 export async function readStoryboardImageMetadata(
   source: string
 ): Promise<StoryboardImageMetadata | null> {
+  guardTauri();
   return await invoke('read_storyboard_image_metadata', { source });
 }
 
@@ -98,6 +108,7 @@ export async function embedStoryboardImageMetadata(
   source: string,
   metadata: StoryboardImageMetadata
 ): Promise<string> {
+  guardTauri();
   return await invoke('embed_storyboard_image_metadata', { source, metadata });
 }
 
@@ -105,6 +116,7 @@ export async function prepareNodeImageSource(
   source: string,
   maxPreviewDimension = 512
 ): Promise<PrepareNodeImageSourceResult> {
+  guardTauri();
   return await invoke('prepare_node_image_source', {
     source,
     maxPreviewDimension,
@@ -116,6 +128,7 @@ export async function prepareNodeImageBinary(
   extension?: string,
   maxPreviewDimension = 512
 ): Promise<PrepareNodeImageSourceResult> {
+  guardTauri();
   return await invoke('prepare_node_image_binary', {
     bytes: Array.from(bytes),
     extension,
@@ -126,16 +139,19 @@ export async function prepareNodeImageBinary(
 export async function cropImageSource(
   payload: CropImageSourcePayload
 ): Promise<string> {
+  guardTauri();
   return await invoke('crop_image_source', { payload });
 }
 
 export async function loadImage(filePath: string): Promise<string> {
+  guardTauri();
   return await invoke('load_image', {
     filePath,
   });
 }
 
 export async function persistImageSource(source: string): Promise<string> {
+  guardTauri();
   return await invoke('persist_image_source', { source });
 }
 
@@ -143,6 +159,7 @@ export async function persistImageBinary(
   bytes: Uint8Array,
   extension = 'png'
 ): Promise<string> {
+  guardTauri();
   return await invoke('persist_image_binary', {
     bytes: Array.from(bytes),
     extension,
@@ -153,6 +170,7 @@ export async function saveImageSourceToDownloads(
   source: string,
   suggestedFileName?: string
 ): Promise<string> {
+  guardTauri();
   return await invoke('save_image_source_to_downloads', {
     source,
     suggestedFileName,
@@ -163,6 +181,7 @@ export async function saveImageSourceToPath(
   source: string,
   targetPath: string
 ): Promise<string> {
+  guardTauri();
   return await invoke('save_image_source_to_path', {
     source,
     targetPath,
@@ -174,6 +193,7 @@ export async function saveImageSourceToDirectory(
   targetDir: string,
   suggestedFileName?: string
 ): Promise<string> {
+  guardTauri();
   return await invoke('save_image_source_to_directory', {
     source,
     targetDir,
@@ -186,6 +206,7 @@ export async function saveImageSourceToAppDebugDir(
   category = 'grid',
   suggestedFileName?: string
 ): Promise<string> {
+  guardTauri();
   return await invoke('save_image_source_to_app_debug_dir', {
     source,
     category,
@@ -194,5 +215,6 @@ export async function saveImageSourceToAppDebugDir(
 }
 
 export async function copyImageSourceToClipboard(source: string): Promise<void> {
+  guardTauri();
   await invoke('copy_image_source_to_clipboard', { source });
 }

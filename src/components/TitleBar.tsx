@@ -24,7 +24,7 @@ export function TitleBar({ onSettingsClick, onTemplateLibraryClick, showBackButt
   const { theme, toggleTheme } = useThemeStore();
   const currentProjectName = useProjectStore((state) => state.currentProject?.name);
 
-  const appWindow = getCurrentWindow();
+  const appWindow = typeof window !== 'undefined' && (window as any).__TAURI__ ? getCurrentWindow() : null;
   const isZh = i18n.language.startsWith('zh');
   const isMac =
     typeof navigator !== 'undefined'
@@ -33,10 +33,12 @@ export function TitleBar({ onSettingsClick, onTemplateLibraryClick, showBackButt
   const titleText = currentProjectName ? `${currentProjectName} - ${appTitle}` : appTitle;
 
   const handleMinimize = useCallback(async () => {
+    if (!appWindow) return;
     await appWindow.minimize();
   }, [appWindow]);
 
   const handleMaximize = useCallback(async () => {
+    if (!appWindow) return;
     const isMaximized = await appWindow.isMaximized();
     if (isMaximized) {
       await appWindow.unmaximize();
@@ -46,11 +48,12 @@ export function TitleBar({ onSettingsClick, onTemplateLibraryClick, showBackButt
   }, [appWindow]);
 
   const handleClose = useCallback(async () => {
+    if (!appWindow) return;
     await appWindow.close();
   }, [appWindow]);
 
   const handleDragStart = useCallback(async (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
+    if (!appWindow || e.button !== 0) return;
     const target = e.target as HTMLElement | null;
     if (target?.closest('button') || target?.closest('[data-no-drag="true"]')) {
       return;
